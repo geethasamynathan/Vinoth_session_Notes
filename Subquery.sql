@@ -72,3 +72,134 @@ SELECT DeptId FROM tblDepartment WHERE
 Location in ('Chennai','Bangalore') )
 
 --corelated subquery
+CREATE TABLE tblProject
+(
+projectId int PRIMARY KEY,
+ProjectName varchar(100),
+DeptId INT,
+Budget Decimal(12,2),
+StartDate DATE,
+FOREIGN KEY(DeptId) references tblDepartment(DeptId)
+);
+
+INSERT INTO tblProject (ProjectId, ProjectName, DeptId, Budget, StartDate)
+VALUES
+(201, 'HR Automation',      1, 200000, '2023-01-10'),
+(202, 'Payroll Upgrade',    1, 150000, '2023-03-15'),
+(203, 'Inventory App',      2, 500000, '2022-07-01'),
+(204, 'Client Portal',      2, 650000, '2023-06-12'),
+(205, 'Audit Tracker',      3, 300000, '2022-09-20'),
+(206, 'Sales Dashboard',    4, 400000, '2023-02-05');
+
+CREATE TABLE tblPerformance
+(
+PerformanceId int PRIMARY KEY,
+EmpId INT,
+ReviewYear INT,
+Rating Decimal(3,1),
+Bonus Decimal(10,2),
+FOREIGN KEY(EmpId) references tblEmployee(EmpId)
+);
+
+INSERT INTO tblPerformance (PerformanceId, EmpId, ReviewYear, Rating, Bonus)
+VALUES
+(1, 101, 2023, 3.8,  5000),
+(2, 102, 2023, 4.5, 10000),
+(3, 103, 2023, 4.2,  8000),
+(4, 104, 2023, 3.9,  6000),
+(5, 105, 2023, 4.1,  7000),
+(6, 106, 2023, 4.8, 15000),
+(7, 107, 2023, 3.5,  4000),
+(8, 108, 2023, 4.6, 12000),
+(9, 109, 2023, 4.3,  9000),
+(10,110, 2023, 4.4, 11000);
+
+
+
+SELECT e.EmpId,e.EmpName, e.JobRole,e.Salary,e.DeptId
+FROM tblEmployee e
+WHERE e.Salary=(
+SELECT MAX(e2.Salary) FROM tblEmployee e2 WHERE e2.DeptId=e.DeptId
+)
+
+SELECT e.EmpId,e.EmpName, e.JobRole,e.Salary,e.DeptId
+FROM tblEmployee e
+WHERE e.Salary>(
+SELECT AVG(e2.Salary) FROM tblEmployee e2 WHERE e2.DeptId=e.DeptId
+)
+
+
+SELECT e.EmpId,e.EmpName,e.DeptId 
+FROM tblEmployee e
+WHERE e.DeptId IN (
+SELECT p.deptId 
+FROM tblProject p
+WHERE p.DeptId=e.DeptId 
+AND p.budget>(
+SELECT AVG(p2.budget)
+FROM tblProject p2 
+WHERE p2.DeptId=p.DeptId)
+)
+
+SELECT e.EmpId,e.EmpName,e.DeptId 
+FROM tblEmployee e
+WHERE e.DeptId IN (
+SELECT p.deptId 
+FROM tblProject p
+WHERE p.DeptId=e.DeptId 
+AND p.budget<200000);
+
+select * from tblEmployee;
+select * from tblPerformance
+
+delete from tblPerformance where EmpId=110
+
+-- EXISTS and NOT EXISTS
+
+SELECT e.EmpId,e.EmpName,e.DeptId 
+FROM tblEmployee e
+WHERE EXISTS(
+SELECT 1 FROM tblPerformance p
+WHERE p.EmpId=e.EmpId);
+
+SELECT e.EmpId,e.EmpName,e.DeptId 
+FROM tblEmployee e
+WHERE NOT EXISTS(
+SELECT 1 FROM tblPerformance p
+WHERE p.EmpId=e.EmpId);
+
+
+select * from tblEmployee;
+-- ANY
+SELECT e.EmpId,e.EmpName,e.Salary 
+FROM tblEmployee e
+WHERE e.Salary > ANY (
+SELECT e2.Salary 
+FROM tblEmployee e2
+WHERE e2.DeptId=1
+AND e2.EmpId<>e.EmpId
+)
+
+select * from tblEmployee;
+-- ANY
+SELECT e.EmpId,e.EmpName,e.Salary 
+FROM tblEmployee e
+WHERE e.Salary > ALL (
+SELECT e2.Salary 
+FROM tblEmployee e2
+WHERE e2.DeptId=e.DeptId
+AND e2.EmpId<>e.EmpId
+)
+
+
+
+--<>
+
+SELECT e.EmpId,e.EmpName,e.Salary,e.DeptId 
+FROM tblEmployee e
+WHERE e.Salary <>  (
+SELECT MIN(e2.Salary)
+FROM tblEmployee e2
+WHERE e2.DeptId=e.DeptId
+
+)
